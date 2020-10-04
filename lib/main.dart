@@ -10,6 +10,7 @@ class App extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       home: Scaffold(
+        backgroundColor: Colors.grey.shade900,
         appBar: AppBar(
           title: Text(
             'Quizee',
@@ -20,7 +21,7 @@ class App extends StatelessWidget {
             ),
           ),
           centerTitle: true,
-          backgroundColor: Colors.teal,
+          backgroundColor: Colors.grey.shade900,
         ),
         body: SafeArea(
           child: Padding(
