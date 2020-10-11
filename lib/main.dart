@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:quizee/quiz_manager.dart';
+import 'package:rflutter_alert/rflutter_alert.dart';
+
+import 'answer_presenter.dart';
 
 void main() {
   runApp(App());
@@ -42,6 +46,49 @@ class QuizPage extends StatefulWidget {
 }
 
 class _QuizPageState extends State<QuizPage> {
+  final QuizManager quizManager = QuizManager();
+
+  @override
+  void initState() {
+    quizManager.initState();
+    super.initState();
+  }
+
+  Future<void> processAnswer(BuildContext context, bool receivedAnswer) async {
+    quizManager.processAnswer(receivedAnswer);
+
+    bool decision = false;
+
+    if (quizManager.isQuizFinished()) {
+      decision = await getDecision(context);
+    }
+
+    setState(() {
+      if (decision) {
+        quizManager.initState();
+      } else {
+        quizManager.nextQuestion();
+      }
+    });
+  }
+
+  Future<bool> getDecision(BuildContext context) {
+    return Alert(
+      context: context,
+      type: AlertType.info,
+      title: "Quizee",
+      desc: "Shall we play again?",
+      buttons: [
+        DialogButton(
+          child: Text('Yes, please!'),
+          onPressed: () {
+            Navigator.pop(context, true);
+          },
+        )
+      ],
+    ).show();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -54,7 +101,7 @@ class _QuizPageState extends State<QuizPage> {
             padding: const EdgeInsets.all(10.0),
             child: Center(
               child: Text(
-                'Placeholder for question text',
+                quizManager.getQuestionText(),
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 25.0,
@@ -77,7 +124,7 @@ class _QuizPageState extends State<QuizPage> {
                   fontWeight: FontWeight.w400,
                 ),
               ),
-              onPressed: () {},
+              onPressed: () => processAnswer(context, true),
             ),
           ),
         ),
@@ -94,7 +141,32 @@ class _QuizPageState extends State<QuizPage> {
                   fontWeight: FontWeight.w400,
                 ),
               ),
-              onPressed: () {},
+              onPressed: () => processAnswer(context, false),
+            ),
+          ),
+        ),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.all(15.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: quizManager.questions.map(
+                (question) {
+                  return Visibility(
+                    maintainSize: true,
+                    maintainAnimation: true,
+                    maintainState: true,
+                    visible: question.isAnswered,
+                    child: Container(
+                      width: 50,
+                      // width: deviceWidth / (quizManager.questions.length + 2),
+                      child: AnswerPresenter(
+                        answer: question.answer,
+                      ),
+                    ),
+                  );
+                },
+              ).toList(),
             ),
           ),
         )
